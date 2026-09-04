@@ -150,3 +150,40 @@ class PaymentTransition(ApiModel):
     new_status: PaymentStatus
     reason: str | None = Field(default=None, max_length=500)
 
+
+class RecommendationGenerateRequest(ApiModel):
+    as_of: datetime | None = None
+    horizon_days: Literal[1, 3] = 3
+    include_storage_scenarios: bool = True
+
+
+class LogisticsQuoteCreate(ApiModel):
+    listing_id: UUID
+    demand_id: UUID | None = None
+    origin_district: str = Field(min_length=1, max_length=160)
+    origin_state: str = Field(min_length=1, max_length=160)
+    destination_district: str = Field(min_length=1, max_length=160)
+    destination_state: str = Field(min_length=1, max_length=160)
+    quantity_kg: DecimalString
+    no_storage_required: bool = False
+    storage_days: int | None = None
+    reference_distance_km: DecimalString | None = None
+    currency: str = Field(default="INR", pattern=r"^[A-Z]{3}$")
+    data_mode: Literal["DEMO", "LIVE", "CACHED"] = "DEMO"
+
+
+class PricePredictionRequest(ApiModel):
+    crop_id: UUID
+    variety_id: UUID | None = None
+    mandi_id: UUID | None = None
+    horizon_days: Literal[1, 3] = 3
+    dataset_id: str | None = None
+    data_mode: Literal["DEMO", "LIVE", "CACHED"] = "DEMO"
+
+
+class QualityReportCreate(ApiModel):
+    crop: str = Field(min_length=1, max_length=100)
+    mime_type: str | None = None
+    width_px: int | None = None
+    height_px: int | None = None
+    data_mode: Literal["DEMO", "LIVE", "CACHED"] = "DEMO"
