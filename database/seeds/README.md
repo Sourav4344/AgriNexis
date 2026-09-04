@@ -17,3 +17,17 @@ No passwords or reusable credentials belong in this repository. The SQL seed doe
 not write to `auth.users`; it only verifies that those identities already exist.
 Every externally sourced fixture is marked `DEMO`, uses dataset
 `SIH-2026-TOMATO-V1`, and carries an explicit non-live label/provenance marker.
+
+To restore the acceptance-ready scenario on any presentation date, apply migration
+018 and run:
+
+```sql
+SET app.demo_seed_enabled = 'on';
+SET app.demo_reset_enabled = 'on';
+\ir database/seeds/002_sih_demo_reset.sql
+```
+
+The reset targets only descendants of the two documented deterministic demo offer
+UUIDs, restores Rahul's 1,000 kg inventory and canonical Buyer A/Buyer B economics,
+and moves only demo validity windows relative to reset time. It never changes the
+fixtures from `DEMO` to `LIVE`.

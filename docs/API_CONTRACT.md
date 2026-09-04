@@ -4,7 +4,7 @@ Base path: `/api/v1`. JSON uses `snake_case`, UTF-8, ISO 8601 UTC timestamps, UU
 
 ## Authentication and authorization
 
-Except health/reference endpoints explicitly marked public, requests require `Authorization: Bearer <Supabase access token>`. FastAPI validates the token and loads the authoritative active profile. Role abbreviations below: F = Farmer, B = Buyer, O = FPO operator, A = Admin. “Party” means only a user/organization participating in that resource. Resource ownership is checked on every object route; knowing a UUID grants nothing.
+For Phase 2, only `GET /health` and optionally `GET /ready` are anonymous. Every other route requires `Authorization: Bearer <Supabase access token>`. References to a “public” profile/FPO view mean redacted visibility among authenticated callers, not anonymous access. FastAPI validates the token and loads the authoritative active profile. Role abbreviations below: F = Farmer, B = Buyer, O = FPO operator, A = Admin. “Party” means only a user/organization participating in that resource. Resource ownership is checked on every object route; knowing a UUID grants nothing.
 
 ## Response conventions
 
@@ -88,6 +88,20 @@ Accept offer (`POST /offers/{id}/accept`, F, idempotent):
 ```
 
 The server revalidates ownership, availability, offer expiry/status, quantity, current trusted cost inputs, and formulas. In one transaction it marks the offer accepted, prevents competing acceptance for reserved quantity, creates the order with immutable financial snapshot fields defined in `DATABASE.md`, and appends history. Client-supplied acknowledged amounts are comparison guards, not trusted values; mismatch returns `409 FINANCIALS_CHANGED` with a new reviewable quote.
+
+`recommendation_option_id` maps to `public.recommendations.id`; each database row
+is one ranked option. FastAPI passes it to the internal acceptance function as
+`p_recommendation_id`. It must also pass the acknowledged currency as
+`p_ack_currency`. The database binds supplied quotes, recommendations, and demands
+to the offer as specified in `DATABASE.md` and returns stable domain diagnostics
+using SQLSTATE `P0001`, message `AGRINEXIS_DOMAIN_ERROR`, and detail
+`AGRINEXIS_CODE=<CODE>;HTTP_STATUS=<STATUS>`. FastAPI parses the code, emits the
+corresponding sanitized 403/409/422 response, and never exposes raw SQL diagnostics.
+Partial acceptance leaves remaining inventory `ACTIVE`; only exact exhaustion
+sets the listing to `SOLD`.
+
+The idempotency request fingerprint covers the complete canonical acceptance
+payload, including acknowledged currency and all selected/version identifiers.
 
 Order transition (`POST /orders/{id}/transitions`):
 

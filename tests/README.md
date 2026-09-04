@@ -6,4 +6,8 @@ then run `001_constraints.sql`, `002_rls.sql`, and `003_acceptance.sql` using a
 migration-capable local PostgreSQL/Supabase connection. All scripts use
 transactions and roll back their test mutations.
 
+After migrations 016-018, also run `004_contract_hardening.sql`. It verifies
+transaction binding, demand failures, acknowledged currency, partial/full listing
+behavior, idempotent replay, payment transitions, and guarded demo reset behavior.
+
 Reserved for cross-module contract, integration, formula, concurrency, RLS/authorization abuse, fallback, accessibility, and deterministic demo tests.

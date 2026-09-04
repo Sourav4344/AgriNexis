@@ -108,8 +108,8 @@ Checks enforce total cost equals component sum and NFR equals gross minus total,
 - Listing: `DRAFT -> ACTIVE -> RESERVED -> SOLD`; `DRAFT/ACTIVE -> CANCELLED`; expiry from `ACTIVE`.
 - Offer: `PENDING -> ACCEPTED|REJECTED|WITHDRAWN|EXPIRED`; acceptance is terminal and idempotent.
 - Order: `CONFIRMED -> PICKUP_SCHEDULED -> IN_TRANSIT -> DELIVERED -> COMPLETED`, with controlled `CANCELLED` or `DISPUTED` branches.
-- Payment: `PENDING -> PROCESSING -> PAID|FAILED|REFUNDED`; transitions come from trusted server/provider events.
-- Grievance: `OPEN -> IN_REVIEW -> RESOLVED|REJECTED`, with reopen policy documented later.
+- Payment: `PENDING -> PROCESSING|FAILED`; `PROCESSING -> PAID|FAILED`; `PAID -> REFUNDED`. Terminal failures require a new payment attempt.
+- Grievance: `OPEN -> UNDER_REVIEW -> RESOLVED|CLOSED`; Phase 2A does not reopen a row.
 
 ## RLS and grants matrix
 
@@ -195,3 +195,62 @@ contract. The following choices close previously identified ambiguities:
   updates demand fulfillment, creates exactly one order per accepted offer, stores
   the immutable snapshot, records history/audit data, and returns an existing
   result for a matching idempotent replay.
+
+## Phase 2B integration contract
+
+- API `recommendation_option_id` maps directly to `public.recommendations.id`.
+  Each row is one ranked option; no separate recommendation-options table exists.
+  The internal parameter remains `p_recommendation_id`.
+- `internal.accept_offer` requires `p_ack_currency char(3)` in addition to the
+  acknowledged gross, total cost, and NFR. Acknowledged, offer, quote, and supplied
+  recommendation currencies must agree.
+- A selected quote must match the listing and the offer's nullable demand context,
+  remain unexpired, and use the offer currency. The current `logistics_quotes`
+  schema does not store a quoted quantity or direct buyer/FPO columns, so quantity
+  suitability cannot be proven from a standalone quote. When a recommendation is
+  supplied, its exact quantity/economics and candidate association provide that
+  additional binding. Agent 4 must create quotes in the correct transaction
+  context and must not claim an independently stored quote-quantity validation.
+- A supplied recommendation must match the listing farmer, buyer or FPO candidate,
+  demand, compatible quote, currency, accepted quantity, unit price, gross value,
+  itemized costs, and total cost, and must remain unexpired. A mandi candidate
+  cannot be attached to a direct buyer/FPO offer acceptance.
+- An offer-linked demand is locked before update and must exist, be `ACTIVE` or
+  `PARTIALLY_FILLED`, be within its delivery window, match crop and optional
+  variety, match the offer owner and currency, and have enough remaining maximum
+  quantity. Exact exhaustion produces `FULFILLED`; otherwise it produces
+  `PARTIALLY_FILLED`.
+- Partial offer acceptance leaves a listing `ACTIVE` with reduced
+  `available_quantity`; exact exhaustion sets `SOLD`. `RESERVED` remains available
+  for a future explicit reservation workflow.
+- Domain failures use SQLSTATE `P0001`, message `AGRINEXIS_DOMAIN_ERROR`, and a
+  stable `PG_EXCEPTION_DETAIL` value of
+  `AGRINEXIS_CODE=<CODE>;HTTP_STATUS=<STATUS>`. Agent 4 must parse only the code and
+  map it to its sanitized API error response; raw database messages, detail, hint,
+  and SQL text must never be returned to clients. Acceptance codes are:
+  `ACTOR_MISMATCH`, `IDEMPOTENCY_CONFLICT`, `OFFER_NOT_PENDING`, `OFFER_EXPIRED`,
+  `OFFER_VERSION_CONFLICT`, `LISTING_VERSION_CONFLICT`, `INSUFFICIENT_QUANTITY`,
+  `QUOTE_INVALID`, `QUOTE_EXPIRED`, `RECOMMENDATION_INVALID`,
+  `RECOMMENDATION_EXPIRED`, `DEMAND_INVALID`, `DEMAND_EXPIRED`,
+  `DEMAND_QUANTITY_EXCEEDED`, `CURRENCY_MISMATCH`, and `FINANCIALS_CHANGED`.
+  Actor failures map to 403, transactional conflicts to 409, and invalid/expired
+  supplied references to 422 as encoded in the detail.
+- `internal.transition_payment` is service-role-only, locks the payment, requires
+  the expected current state, applies only the payment transitions above, sets
+  `paid_at` on entry to `PAID`, and appends an audit event. A trigger also rejects
+  invalid direct privileged updates. Ordinary authenticated roles retain no
+  payment update grant.
+- A successful same-key/same-fingerprint acceptance replay returns the original
+  order ID. Same key/different fingerprint and in-progress duplicates return
+  `IDEMPOTENCY_CONFLICT`. Failed transactions roll back their marker and may be
+  retried under normal backend policy; Phase 2B does not persist/replay elaborate
+  failed outcomes. The request fingerprint must be computed from the canonical
+  complete acceptance request, including versions, quote/recommendation IDs,
+  acknowledged amounts, and acknowledged currency.
+- Phase 2 anonymous access is limited to backend `GET /health` and optional
+  `GET /ready`. No public application table receives an anonymous database grant.
+- The guarded `internal.reset_sih_demo()` resets only records tied to the two known
+  deterministic demo offer UUIDs. It requires both `app.demo_seed_enabled=on` and
+  `app.demo_reset_enabled=on`, deletes only their transaction descendants, restores
+  canonical quantities/economics, and moves demo validity windows relative to the
+  reset time without changing `data_mode='DEMO'`.
