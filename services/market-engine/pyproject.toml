@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agrinexis-market-engine"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = ["asyncpg>=0.29", "pydantic>=2.8", "pydantic-settings>=2.4"]
+
+[project.optional-dependencies]
+dev = ["mypy>=1.11", "pytest>=8.3", "pytest-asyncio>=0.24", "ruff>=0.6"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+markers = ["integration: requires a disposable migrated PostgreSQL database"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+
+[tool.setuptools.packages.find]
+include = ["market_engine*"]
