@@ -1041,5 +1041,3 @@ def test_persistence_failure_is_surfaced_not_swallowed() -> None:
         ))
     assert exc_info.value.code == "PERSISTENCE_FAILED"
     assert exc_info.value.status_code == 500
-
-

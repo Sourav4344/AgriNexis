@@ -548,4 +548,3 @@ async def generate_and_persist_recommendations(
                 r["data_warning"] = "DEMO DATA — NOT LIVE GOVERNMENT DATA"
 
     return persisted_rows
-
