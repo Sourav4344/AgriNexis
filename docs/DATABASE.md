@@ -44,10 +44,39 @@ Listing quantity and availability must be positive; available quantity cannot ex
 | Table | Essential fields and constraints |
 |---|---|
 | `mandis` | `id`, external/provider identifiers, name, geography, coordinates, active flag |
-| `mandi_prices` | `id`, mandi/crop/variety, min/modal/max price, normalized unit/currency, `observed_at`, `retrieved_at`, source/provenance, `data_mode`, quality flags |
+| `mandi_prices` | `id`, mandi/crop/variety, min/modal/max price, normalized unit/currency, `observed_at`, `fetched_at`, source/provenance, `data_mode`, quality flags |
 | `price_history` | Prefer a curated/materialized read model derived from immutable observations; if a table, retain source linkage and transformation version |
 
 Deduplicate observations by provider + external record ID, or a documented natural-key hash. Index `(crop_id, variety_id, observed_at desc)`, `(mandi_id, observed_at desc)`, and common geography filters.
+
+### Phase 3A market-data semantics
+
+- Provider-managed mandi identity is the case-sensitive composite
+  `(provider_name, external_id)` when both values are non-null. Migration 019
+  enforces this with a partial unique index. Rows with either value null remain
+  valid for manually defined/local mandis; ingestion must resolve/upsert a fully
+  identified provider mandi by this composite key.
+- `mandi_prices.data_mode` records observation origin. A genuine observation
+  ingested from a real source remains stored as `LIVE`. Returning that persisted
+  row during an upstream outage may produce an API/engine delivery mode of
+  `CACHED`, but must not insert or relabel the observation. `DEMO` rows always
+  remain `DEMO` and are never promoted to `LIVE` or `CACHED`.
+- For Phase 2, `arrival_quantity` is a normalized kilogram quantity and market
+  prices are normalized to `INR/kg` (`currency='INR'`, `normalized_unit='kg'`).
+  Supported source-unit conversion and rejection of unknown/unlabelled units are
+  Agent 6 trusted-code responsibilities, not SQL conversion behavior.
+- Operational freshness defaults are `MARKET_LIVE_MAX_AGE_MINUTES=180` and
+  `MARKET_CACHE_MAX_AGE_HOURS=48`. They belong in Agent 6/application
+  configuration rather than database constraints. Older rows remain historical
+  data but are ineligible for current-price fallback.
+- `price_history.price_date` is derived from `mandi_prices.observed_at` in the
+  configured market/source timezone; the prototype default is `Asia/Kolkata`.
+- The existing schema has separate `crop_id` and nullable `variety_id` foreign
+  keys but no composite crop/variety FK. Retrofitting one consistently would touch
+  listings, demands, offers' related records, market observations, history, and
+  other established tables. Phase 3A therefore leaves the schema unchanged and
+  requires Agent 6 to verify that every supplied variety belongs to its selected
+  crop before persistence. Database FKs still require both identifiers to exist.
 
 ## Demand, offers, and recommendations
 
