@@ -111,7 +111,7 @@ export default function GrievancesPage() {
                     <option value="QUALITY_MISMATCH">Quality Mismatch / Grading Dispute</option>
                     <option value="WEIGHT_DISCREPANCY">Weight Discrepancy / Transit Loss</option>
                     <option value="DELIVERY_DELAY">Logistics / Delivery Delay</option>
-                    <option value="PAYMENT_ISSUE">Payment Escrow / Bank Settlement</option>
+                    <option value="PAYMENT_ISSUE">Payment / Bank Settlement</option>
                     <option value="OTHER">Other Contract Dispute</option>
                   </select>
                 </div>

@@ -862,7 +862,7 @@ def test_logistics_live_mode_rejects_silent_demo_fallback() -> None:
         "quantity_kg": "1000.000",
         "data_mode": "LIVE",
     })
-    assert resp.status_code == 400
+    assert resp.status_code == 503
     err = resp.json()
     assert err["error"]["code"] == "LOGISTICS_UNAVAILABLE"
 

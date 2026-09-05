@@ -232,7 +232,7 @@ export default function PaymentsPage() {
               <label className="font-semibold text-slate-700 block mb-1">Audit Reason</label>
               <input
                 type="text"
-                placeholder="e.g. Escrow verified after delivery confirmation"
+                placeholder="e.g. Payment verified after delivery confirmation"
                 value={transitionReason}
                 onChange={(e) => setTransitionReason(e.target.value)}
                 className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900"

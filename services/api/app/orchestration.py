@@ -150,7 +150,7 @@ async def resolve_or_create_quote(
         raise ApiError(
             "LOGISTICS_UNAVAILABLE",
             f"No live logistics quote available for route {origin_district} -> {dest_district}",
-            400,
+            503,
         )
 
     quote_req = QuoteRequest(
@@ -214,7 +214,7 @@ async def resolve_or_create_quote(
             )
         except Exception as exc:
             logger.error("Failed to persist logistics quote to database: %s", exc)
-            raise ApiError("PERSISTENCE_FAILED", f"Failed to persist logistics quote: {exc}", 500) from exc
+            raise ApiError("PERSISTENCE_FAILED", "Failed to persist logistics quote to database", 500) from exc
     return quote_dict
 
 
@@ -536,7 +536,7 @@ async def generate_and_persist_recommendations(
                 raise
             except Exception as exc:
                 logger.error("Failed to persist recommendation option to database: %s", exc)
-                raise ApiError("PERSISTENCE_FAILED", f"Failed to persist recommendation option: {exc}", 500) from exc
+                raise ApiError("PERSISTENCE_FAILED", "Failed to persist recommendation option to database", 500) from exc
         else:
             persisted_rows.append(row_dict)
 
