@@ -56,8 +56,39 @@ tests/      cross-module contract, integration, and security tests
 docs/       architecture and delivery contracts
 ```
 
-See [Architecture](docs/ARCHITECTURE.md), [Database](docs/DATABASE.md), [API contract](docs/API_CONTRACT.md), [Security](docs/SECURITY.md), [Design system](docs/DESIGN_SYSTEM.md), [Demo](docs/DEMO.md), and [decisions](docs/DECISIONS.md).
+See [Architecture](docs/ARCHITECTURE.md), [Database](docs/DATABASE.md), [API contract](docs/API_CONTRACT.md), [Security](docs/SECURITY.md), [Design system](docs/DESIGN_SYSTEM.md), [Demo strategy](docs/DEMO.md), [Deployment guide](docs/DEPLOYMENT.md), and [Decisions](docs/DECISIONS.md).
+
+## Quick Start (SIH 2026 Judge Demo)
+
+Run the automated demo startup script:
+
+```powershell
+# Windows (PowerShell)
+.\scripts\start-demo.ps1
+.\scripts\check-demo.ps1
+.\scripts\stop-demo.ps1
+```
+
+```bash
+# Linux / macOS (Bash)
+./scripts/start-demo.sh
+./scripts/check-demo.sh
+./scripts/stop-demo.sh
+```
+
+Or run via Docker Compose:
+
+```bash
+docker compose up -d
+docker compose logs -f api
+docker compose down
+```
+
+Accessible Local Endpoints:
+- **FastAPI Core & Swagger**: `http://localhost:8000/docs`
+- **Buyer & FPO Dashboard**: `http://localhost:3001`
+- **Admin Operations**: `http://localhost:3002`
 
 ## Development status
 
-**Phase 1 — architecture foundation.** The repository currently contains contracts, ownership rules, and placeholders only. The applications, database schema, integrations, and ML models are not yet implemented or production-ready. Demo fixtures will always be labelled as demo data and never presented as live government data.
+AgriNexis features a complete modular-monolith backend with 7 process-local intelligence and transaction engines, 19 ordered PostgreSQL migrations, deterministic SIH demo fixtures (`SIH-2026-TOMATO-V1`), and responsive Buyer and Admin Next.js web applications. Demo fixtures are visibly labelled as demo data and never presented as live government data. For production deployment requirements and known limitations, consult [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).

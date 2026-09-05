@@ -43,3 +43,30 @@ class LogisticsEngine(Protocol):
 class QualityEngine(Protocol):
     async def assess(self, request: EngineRequest) -> EngineResult: ...
 
+
+def get_matching_engine() -> MatchingEngine:
+    from matching_engine.adapter import Agent4MatchingEngineAdapter
+    from matching_engine.service import MatchingService
+    return Agent4MatchingEngineAdapter(MatchingService(), result_factory=lambda **kw: EngineResult(**kw))
+
+
+def get_prediction_engine(repository=None) -> PredictionEngine:
+    from prediction_engine.adapter import Agent4PredictionEngineAdapter
+    from prediction_engine.repository import MemoryPredictionHistoryRepository
+    from prediction_engine.service import PredictionService
+    repo = repository or MemoryPredictionHistoryRepository()
+    return Agent4PredictionEngineAdapter(PredictionService(repo), result_factory=lambda **kw: EngineResult(**kw))
+
+
+def get_market_engine(repository=None) -> MarketEngine:
+    from market_engine.adapter import Agent4MarketEngineAdapter
+    from market_engine.repositories.memory import MemoryMarketRepository
+    from market_engine.service import MarketService
+    from market_engine.settings import MarketSettings
+    repo = repository or MemoryMarketRepository()
+    return Agent4MarketEngineAdapter(MarketService(repo, MarketSettings()), result_factory=lambda **kw: EngineResult(**kw))
+
+
+def get_quality_service():
+    from quality_engine.service import QualityService
+    return QualityService()

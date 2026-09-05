@@ -10,6 +10,7 @@
 Thumbs.db
 __pycache__/
 *.py[cod]
+*.egg-info/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
@@ -28,3 +29,4 @@ build/
 logs/
 tmp/
 *.log
+.demo-pids.json

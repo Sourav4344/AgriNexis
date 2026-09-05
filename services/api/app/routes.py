@@ -2,16 +2,25 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Annotated, Any
-from uuid import UUID
+from typing import Annotated, Any, Literal
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, Header, Query, Request, status
+from prediction_engine.models import DataMode as PredictionDataMode
+from prediction_engine.models import PredictionQuery
+from quality_engine.models import DataMode as QualityDataMode
+from quality_engine.models import ImageMetadata, QualityRequest
 
 from .auth import current_principal, get_database, require_roles
 from .database import Database
+from .engines import get_quality_service
 from .errors import ApiError
 from .fingerprint import request_fingerprint
 from .models import Principal, Role
+from .orchestration import (
+    generate_and_persist_recommendations,
+    resolve_or_create_quote,
+)
 from .pagination import decode_cursor, encode_cursor
 from .responses import envelope
 from .schemas import (
@@ -19,11 +28,15 @@ from .schemas import (
     DemandPatch,
     ListingCreate,
     ListingPatch,
+    LogisticsQuoteCreate,
     OfferAccept,
     OfferCreate,
     OrderTransition,
     PaymentTransition,
+    PricePredictionRequest,
     ProfilePatch,
+    QualityReportCreate,
+    RecommendationGenerateRequest,
 )
 
 router = APIRouter()
@@ -163,6 +176,7 @@ async def list_varieties(crop_id: UUID, request: Request, _: Principal = Depends
 
 
 @router.post("/listings", status_code=status.HTTP_201_CREATED, summary="Create a farmer listing")
+@router.post("/produce-listings", status_code=status.HTTP_201_CREATED, include_in_schema=False)
 async def create_listing(body: ListingCreate, request: Request, principal: Principal = Depends(require_roles(Role.FARMER)), database: Database = Depends(get_database)):
     if body.available_until and body.available_until < body.available_from:
         raise ApiError("VALIDATION_ERROR", "Availability dates are invalid", 422)
@@ -177,6 +191,7 @@ async def create_listing(body: ListingCreate, request: Request, principal: Princ
 
 
 @router.get("/listings", summary="List owned or discoverable listings")
+@router.get("/produce-listings", include_in_schema=False)
 async def list_listings(request: Request, limit: Annotated[int, Query(ge=1, le=100)] = 25, cursor: str | None = None, principal: Principal = Depends(current_principal), database: Database = Depends(get_database)):
     after = decode_cursor(cursor)
     rows = list(await database.fetch(
@@ -212,11 +227,13 @@ async def _listing_row(database: Database, listing_id: UUID, principal: Principa
 
 
 @router.get("/listings/{listing_id}", summary="Get a listing without private location data")
+@router.get("/produce-listings/{listing_id}", include_in_schema=False)
 async def get_listing(listing_id: UUID, request: Request, principal: Principal = Depends(current_principal), database: Database = Depends(get_database)):
     return envelope(request, await _listing_row(database, listing_id, principal))
 
 
 @router.patch("/listings/{listing_id}", summary="Update a draft farmer listing")
+@router.patch("/produce-listings/{listing_id}", include_in_schema=False)
 async def patch_listing(listing_id: UUID, body: ListingPatch, request: Request, if_match: Annotated[str | None, Header(alias="If-Match")] = None, principal: Principal = Depends(require_roles(Role.FARMER, Role.ADMIN)), database: Database = Depends(get_database)):
     version = _if_match(if_match, body.version)
     current = await _listing_row(database, listing_id, principal)
@@ -255,16 +272,19 @@ async def _set_listing_status(listing_id: UUID, target: str, allowed: tuple[str,
 
 
 @router.post("/listings/{listing_id}/publish", summary="Publish a draft listing")
+@router.post("/produce-listings/{listing_id}/publish", include_in_schema=False)
 async def publish_listing(listing_id: UUID, request: Request, principal: Principal = Depends(require_roles(Role.FARMER, Role.ADMIN)), database: Database = Depends(get_database)):
     return await _set_listing_status(listing_id, "ACTIVE", ("DRAFT",), request, principal, database)
 
 
 @router.post("/listings/{listing_id}/cancel", summary="Cancel a listing")
+@router.post("/produce-listings/{listing_id}/cancel", include_in_schema=False)
 async def cancel_listing(listing_id: UUID, request: Request, principal: Principal = Depends(require_roles(Role.FARMER, Role.ADMIN)), database: Database = Depends(get_database)):
     return await _set_listing_status(listing_id, "CANCELLED", ("DRAFT", "ACTIVE"), request, principal, database)
 
 
 @router.get("/listings/{listing_id}/private-location", summary="Get an explicitly authorized private listing location")
+@router.get("/produce-listings/{listing_id}/private-location", include_in_schema=False)
 async def get_private_location(listing_id: UUID, request: Request, principal: Principal = Depends(current_principal), database: Database = Depends(get_database)):
     authorized = await database.fetchrow(
         """select 1 from public.produce_listings l where l.id=$1 and
@@ -281,6 +301,7 @@ async def get_private_location(listing_id: UUID, request: Request, principal: Pr
 
 
 @router.post("/demands", status_code=status.HTTP_201_CREATED, summary="Create a buyer or FPO demand")
+@router.post("/buyer-demands", status_code=status.HTTP_201_CREATED, include_in_schema=False)
 async def create_demand(body: DemandCreate, request: Request, principal: Principal = Depends(require_roles(Role.BUYER, Role.FPO)), database: Database = Depends(get_database)):
     if body.delivery_until < body.delivery_from or body.maximum_quantity < body.minimum_quantity:
         raise ApiError("VALIDATION_ERROR", "Demand range or dates are invalid", 422)
@@ -307,6 +328,7 @@ async def create_demand(body: DemandCreate, request: Request, principal: Princip
 
 
 @router.get("/demands", summary="List owned or farmer-visible demands")
+@router.get("/buyer-demands", include_in_schema=False)
 async def list_demands(request: Request, limit: Annotated[int, Query(ge=1, le=100)] = 25, principal: Principal = Depends(current_principal), database: Database = Depends(get_database)):
     rows = await database.fetch(
         """select d.* from public.buyer_demands d where d.deleted_at is null and
@@ -330,11 +352,13 @@ async def _owned_demand(database: Database, demand_id: UUID, principal: Principa
 
 
 @router.get("/demands/{demand_id}", summary="Get an authorized demand")
+@router.get("/buyer-demands/{demand_id}", include_in_schema=False)
 async def get_demand(demand_id: UUID, request: Request, principal: Principal = Depends(current_principal), database: Database = Depends(get_database)):
     return envelope(request, await _owned_demand(database, demand_id, principal))
 
 
 @router.patch("/demands/{demand_id}", summary="Update a draft demand")
+@router.patch("/buyer-demands/{demand_id}", include_in_schema=False)
 async def patch_demand(demand_id: UUID, body: DemandPatch, request: Request, if_match: Annotated[str | None, Header(alias="If-Match")] = None, principal: Principal = Depends(require_roles(Role.BUYER, Role.FPO, Role.ADMIN)), database: Database = Depends(get_database)):
     version = _if_match(if_match, body.version)
     current = await _owned_demand(database, demand_id, principal)
@@ -362,13 +386,16 @@ async def _set_demand_status(demand_id: UUID, target: str, allowed: tuple[str, .
 
 
 @router.post("/demands/{demand_id}/publish", summary="Publish a draft demand")
+@router.post("/buyer-demands/{demand_id}/publish", include_in_schema=False)
 async def publish_demand(demand_id: UUID, request: Request, principal: Principal = Depends(require_roles(Role.BUYER, Role.FPO, Role.ADMIN)), database: Database = Depends(get_database)):
     return await _set_demand_status(demand_id, "ACTIVE", ("DRAFT",), request, principal, database)
 
 
 @router.post("/demands/{demand_id}/cancel", summary="Cancel a demand")
+@router.post("/buyer-demands/{demand_id}/cancel", include_in_schema=False)
 async def cancel_demand(demand_id: UUID, request: Request, principal: Principal = Depends(require_roles(Role.BUYER, Role.FPO, Role.ADMIN)), database: Database = Depends(get_database)):
     return await _set_demand_status(demand_id, "CANCELLED", ("DRAFT", "ACTIVE", "PARTIALLY_FILLED"), request, principal, database)
+
 
 
 @router.post("/offers", status_code=status.HTTP_201_CREATED, summary="Create a buyer or FPO offer")
@@ -613,6 +640,227 @@ async def list_market_prices(request: Request, crop_id: UUID | None = None, limi
     return envelope(request, rows, next_cursor=None, limit=limit)
 
 
-@router.get("/listings/{listing_id}/prediction", summary="Request the configured price-prediction adapter")
-async def listing_prediction(listing_id: UUID, _: Principal = Depends(current_principal)):
-    raise ApiError("PREDICTION_ENGINE_NOT_CONFIGURED", "Prediction engine is not configured", 503)
+@router.post("/listings/{listing_id}/recommendations", status_code=status.HTTP_200_OK, summary="Generate and persist recommendation options")
+@router.post("/produce-listings/{listing_id}/recommendations", status_code=status.HTTP_200_OK, include_in_schema=False)
+async def generate_recommendations(
+    listing_id: UUID,
+    request: Request,
+    body: RecommendationGenerateRequest | None = None,
+    principal: Principal = Depends(require_roles(Role.FARMER, Role.ADMIN)),
+    database: Database = Depends(get_database),
+):
+    listing = await database.fetchrow(
+        "select farmer_profile_id from public.produce_listings where id=$1 and deleted_at is null",
+        listing_id,
+    )
+    if not listing:
+        raise ApiError("NOT_FOUND", "Listing not found", 404)
+    if listing["farmer_profile_id"] != principal.profile_id and principal.role is not Role.ADMIN:
+        raise ApiError("NOT_FOUND", "Listing not found", 404)
+
+    req = body or RecommendationGenerateRequest()
+    rows = await generate_and_persist_recommendations(
+        database=database,
+        listing_id=listing_id,
+        principal=principal,
+        as_of=req.as_of,
+        horizon_days=req.horizon_days,
+        include_storage_scenarios=req.include_storage_scenarios,
+    )
+    if rows:
+        best = Decimal(rows[0]["estimated_net_farmer_realization"])
+        for row in rows:
+            row["difference_from_best"] = best - Decimal(row["estimated_net_farmer_realization"])
+            if row.get("data_mode") == "DEMO":
+                row["data_warning"] = "DEMO DATA — NOT LIVE GOVERNMENT DATA"
+    return envelope(request, rows, next_cursor=None, limit=len(rows))
+
+
+@router.post("/logistics/quotes", status_code=status.HTTP_201_CREATED, summary="Generate a logistics quote")
+async def create_logistics_quote(
+    body: LogisticsQuoteCreate,
+    request: Request,
+    principal: Principal = Depends(current_principal),
+    database: Database = Depends(get_database),
+):
+    quote_data = await resolve_or_create_quote(
+        database=database,
+        listing_id=body.listing_id,
+        demand_id=body.demand_id,
+        origin_district=body.origin_district,
+        origin_state=body.origin_state,
+        dest_district=body.destination_district,
+        dest_state=body.destination_state,
+        quantity_kg=Decimal(body.quantity_kg),
+        no_storage_required=body.no_storage_required,
+        storage_days=body.storage_days,
+        reference_distance_km=Decimal(body.reference_distance_km) if body.reference_distance_km is not None else None,
+        data_mode=body.data_mode,
+    )
+    quote_id = quote_data["id"]
+    row = await database.fetchrow("select * from public.logistics_quotes where id=$1", quote_id)
+    return envelope(request, dict(row) if row else quote_data)
+
+
+@router.post("/predictions/price", summary="Generate a price prediction forecast")
+async def predict_price(
+    body: PricePredictionRequest,
+    request: Request,
+    principal: Principal = Depends(current_principal),
+    database: Database = Depends(get_database),
+):
+    from prediction_engine.repository import (
+        MemoryPredictionHistoryRepository,
+        PostgresPredictionHistoryRepository,
+    )
+    from prediction_engine.service import PredictionService
+
+    repo: Any
+    if hasattr(database, "pool") and getattr(database, "pool", None) is not None:
+        repo = PostgresPredictionHistoryRepository(database.pool)
+    else:
+        repo = MemoryPredictionHistoryRepository()
+
+    service = PredictionService(repo)
+    mandi_id = body.mandi_id or UUID("30000000-0000-4000-8000-000000000001")
+    dataset_id = body.dataset_id or ("sih-demo-market-v1" if body.data_mode == "DEMO" else None)
+    query = PredictionQuery(
+        crop_id=body.crop_id,
+        variety_id=body.variety_id,
+        mandi_id=mandi_id,
+        horizon_days=3 if body.horizon_days not in (1, 3) else body.horizon_days,
+        data_mode=PredictionDataMode(body.data_mode),
+        dataset_id=dataset_id,
+    )
+    result = await service.forecast(query, as_of=datetime.now(UTC), configuration_version="prediction-config-v1")
+    payload = result.model_dump(mode="json")
+    return envelope(request, payload)
+
+
+@router.get("/listings/{listing_id}/prediction", summary="Get price prediction for a listing")
+@router.get("/produce-listings/{listing_id}/prediction", include_in_schema=False)
+async def listing_prediction(
+    listing_id: UUID,
+    request: Request,
+    horizon_days: Literal[1, 3] = Query(default=3),
+    principal: Principal = Depends(current_principal),
+    database: Database = Depends(get_database),
+):
+    listing = await database.fetchrow(
+        "select crop_id,variety_id,farmer_profile_id from public.produce_listings where id=$1 and deleted_at is null",
+        listing_id,
+    )
+    if not listing:
+        raise ApiError("NOT_FOUND", "Listing not found", 404)
+
+    from prediction_engine.repository import (
+        MemoryPredictionHistoryRepository,
+        PostgresPredictionHistoryRepository,
+    )
+    from prediction_engine.service import PredictionService
+
+    repo: Any
+    if hasattr(database, "pool") and getattr(database, "pool", None) is not None:
+        repo = PostgresPredictionHistoryRepository(database.pool)
+    else:
+        repo = MemoryPredictionHistoryRepository()
+
+    mandi_row = await database.fetchrow("select id from public.mandis where active limit 1")
+    mandi_id = mandi_row["id"] if mandi_row else UUID("30000000-0000-4000-8000-000000000001")
+
+    service = PredictionService(repo)
+    query = PredictionQuery(
+        crop_id=listing["crop_id"],
+        variety_id=listing["variety_id"],
+        mandi_id=mandi_id,
+        horizon_days=3 if horizon_days not in (1, 3) else horizon_days,
+        data_mode=PredictionDataMode.DEMO,
+        dataset_id="sih-demo-market-v1",
+    )
+    result = await service.forecast(query, as_of=datetime.now(UTC), configuration_version="prediction-config-v1")
+    payload = result.model_dump(mode="json")
+    return envelope(request, payload)
+
+
+@router.post("/listings/{listing_id}/quality-reports", status_code=status.HTTP_201_CREATED, summary="Create an assistive visual quality report")
+@router.post("/produce-listings/{listing_id}/quality-reports", status_code=status.HTTP_201_CREATED, include_in_schema=False)
+async def create_quality_report(
+    listing_id: UUID,
+    body: QualityReportCreate,
+    request: Request,
+    principal: Principal = Depends(require_roles(Role.FARMER, Role.ADMIN)),
+    database: Database = Depends(get_database),
+):
+    listing = await database.fetchrow(
+        "select farmer_profile_id from public.produce_listings where id=$1 and deleted_at is null",
+        listing_id,
+    )
+    if not listing:
+        raise ApiError("NOT_FOUND", "Listing not found", 404)
+    if listing["farmer_profile_id"] != principal.profile_id and principal.role is not Role.ADMIN:
+        raise ApiError("NOT_FOUND", "Listing not found", 404)
+
+    service = get_quality_service()
+    meta = None
+    if body.width_px and body.height_px:
+        meta = ImageMetadata(
+            asset_id=uuid4(),
+            mime_type=body.mime_type or "image/jpeg",
+            size_bytes=1024,
+            width_px=body.width_px,
+            height_px=body.height_px,
+            checksum_sha256="0" * 64,
+        )
+    q_req = QualityRequest(
+        request_id=uuid4(),
+        listing_id=listing_id,
+        image=meta,
+        crop=body.crop,
+        as_of=datetime.now(UTC),
+        configuration_version="quality-config-v1",
+        data_mode=QualityDataMode(body.data_mode),
+    )
+    q_res = service.assess(q_req)
+
+    observations_json = {
+        "color_uniformity": q_res.observations.visible_color_uniformity.value if q_res.observations and q_res.observations.visible_color_uniformity else None,
+        "defect_ratio": q_res.observations.visible_surface_defect_ratio.value if q_res.observations and q_res.observations.visible_surface_defect_ratio else None,
+        "damage": q_res.observations.visible_damage_observed.value if q_res.observations and q_res.observations.visible_damage_observed else None,
+        "size_consistency": q_res.observations.size_consistency.value if q_res.observations and q_res.observations.size_consistency else None,
+        "ripeness": q_res.observations.ripeness_stage.value if q_res.observations and q_res.observations.ripeness_stage else None,
+        "raw_status": q_res.status.value,
+        "warnings": list(q_res.warnings),
+    }
+
+    conf = None
+
+    report_row = await database.fetchrow(
+        """insert into public.quality_reports(
+            listing_id, method, source_name, observations, confidence,
+            verification_status, manually_verified, limitations, model_version, data_mode
+        ) values($1, $2, $3, $4, $5, 'UNVERIFIED', false, $6, $7, $8) returning *""",
+        listing_id,
+        "VISUAL_INSPECTION_ASSISTIVE",
+        "quality-engine",
+        observations_json,
+        conf,
+        list(q_res.limitations),
+        q_res.model_version or service.engine_version,
+        body.data_mode,
+    )
+    row_dict = dict(report_row) if report_row else {"listing_id": listing_id}
+    row_dict["status"] = q_res.status.value
+    return envelope(request, row_dict)
+
+
+@router.get("/quality-reports/{report_id}", summary="Get a quality report")
+async def get_quality_report(
+    report_id: UUID,
+    request: Request,
+    principal: Principal = Depends(current_principal),
+    database: Database = Depends(get_database),
+):
+    row = await database.fetchrow("select * from public.quality_reports where id=$1", report_id)
+    if not row:
+        raise ApiError("NOT_FOUND", "Quality report not found", 404)
+    return envelope(request, dict(row))

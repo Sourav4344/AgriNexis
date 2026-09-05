@@ -1,0 +1,66 @@
+'use client';
+
+import React from 'react';
+import { Sparkles, ShieldAlert, AlertTriangle, CheckCircle2, Info, Eye } from 'lucide-react';
+import { Card } from '../../components/ui/Card';
+import { Badge } from '../../components/ui/Badge';
+import { Button } from '../../components/ui/Button';
+import { BackendUnavailable } from '../../components/ui/BackendUnavailable';
+
+export default function QualityPage() {
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+            Produce Quality AI Oversight
+          </h1>
+          <p className="text-sm text-slate-500 mt-0.5">
+            Assistive visual assessment auditing, grading confidence, and compliance with certification disclaimers.
+          </p>
+        </div>
+      </div>
+
+      {/* Critical AI Limitation & Safety Disclaimers */}
+      <Card
+        className="border-amber-300 bg-amber-50/40"
+        title="Assistive visual assessment only"
+        subtitle="Images cannot establish laboratory or food-safety properties"
+      >
+        <div className="space-y-3 text-xs text-amber-950">
+          <div className="p-3 bg-white rounded-xl border border-amber-200 flex items-start gap-3">
+            <ShieldAlert className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <span className="font-bold text-slate-900">
+                Visual AI is Strictly Assistive Evidence — NOT Laboratory Certification
+              </span>
+              <p className="text-slate-600 leading-relaxed">
+                Under the AgriNexis working agreement, computer vision models assist with preliminary
+                grading (color uniformity, visual defects, surface blemishes). Computer vision models
+                <strong> CANNOT and MUST NOT claim</strong>:
+              </p>
+              <ul className="list-disc pl-4 space-y-0.5 text-slate-700 font-medium">
+                <li>Chemical pesticide residue clearance</li>
+                <li>Heavy metal or chemical composition analysis</li>
+                <li>Laboratory-grade safety certification</li>
+                <li>Precise internal moisture content</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Backend Status Notice */}
+      <BackendUnavailable
+        featureName="Visual Produce Quality AI Engine (POST /produce-listings/{id}/quality-reports)"
+        plannedEndpoint="POST /produce-listings/{id}/quality-reports"
+        assignedAgent="Agent 10 (Produce Quality AI)"
+        description="Live visual assessment unavailable. Production computer vision inference is not connected in this workspace. Any future visual evidence remains strictly assistive."
+      />
+
+      <Card title="Live visual assessment unavailable" subtitle="ASSISTIVE_VISUAL_ASSESSMENT_ONLY">
+        <p className="text-sm text-slate-600">No assessment available. When supplied, evidence may describe visible color uniformity, surface defect ratio, visible damage, size consistency, ripeness, and image usability.</p>
+      </Card>
+    </div>
+  );
+}

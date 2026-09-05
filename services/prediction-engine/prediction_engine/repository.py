@@ -97,3 +97,21 @@ def memory_series_matches(item: HistoryObservation, query: PredictionQuery) -> b
         and item.data_mode == stored_mode
         and item.dataset_id == query.dataset_id
     )
+
+
+class MemoryPredictionHistoryRepository:
+    def __init__(self, rows: list[HistoryObservation] | None = None, fail: Exception | None = None) -> None:
+        self.rows = rows or []
+        self.fail = fail
+
+    async def history(
+        self, request: PredictionQuery, as_of: datetime, limit: int
+    ) -> list[HistoryObservation]:
+        if self.fail:
+            raise self.fail
+        rows = [
+            row
+            for row in self.rows
+            if memory_series_matches(row, request) and row.observed_at <= as_of
+        ]
+        return sorted(rows, key=lambda row: (row.price_date, row.observed_at, row.id.hex))[-limit:]
