@@ -176,7 +176,8 @@ export interface RecommendationOption {
   estimated_total_applicable_cost: string;
   estimated_net_farmer_realization: string;
   rank: number;
-  sell_wait: 'SELL_NOW' | 'WAIT';
+  sell_wait: 'SELL_NOW' | 'WAIT' | 'INSUFFICIENT_DATA';
+  timing_reason?: string | null;
   explanation_facts: string[];
   confidence: number | null;
   data_mode: DataMode;

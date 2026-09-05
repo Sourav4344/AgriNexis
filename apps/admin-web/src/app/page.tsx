@@ -17,6 +17,7 @@ import {
   Award,
   Layers,
   CheckCircle2,
+  Sparkles,
 } from 'lucide-react';
 import { useDemo } from '../lib/config/demoContext';
 import { StatCard } from '../components/metrics/StatCard';
@@ -209,16 +210,50 @@ export default function OverviewPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/nfr-explainability">
+          <Link href="/demo">
             <Button
               variant="primary"
               size="md"
-              leftIcon={<Award className="w-4 h-4 text-amber-300" />}
+              leftIcon={<Sparkles className="w-4 h-4 text-emerald-300" />}
+              className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold shadow-md"
             >
-              NFR SIH Evaluation Engine
+              SIH 2026 Judge Demo Hub
+            </Button>
+          </Link>
+          <Link href="/nfr-explainability">
+            <Button
+              variant="outline"
+              size="md"
+              leftIcon={<Award className="w-4 h-4 text-amber-500" />}
+            >
+              NFR Engine
             </Button>
           </Link>
         </div>
+      </div>
+
+      {/* SIH Judge Demo Callout Banner */}
+      <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-950 text-white shadow-md border border-emerald-700/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider bg-emerald-500/30 text-emerald-200 px-2.5 py-0.5 rounded border border-emerald-400/30">
+              SIH 2026 Problem Statement 26132
+            </span>
+            <span className="text-xs text-slate-300">Government of Maharashtra</span>
+          </div>
+          <h2 className="text-base font-bold text-white">
+            “Not Just the Best Price. The Best Decision.” — 5–7 Minute Judge Demonstration
+          </h2>
+          <p className="text-xs text-emerald-200/90">
+            Interactive 8-step walkthrough proving Net Farmer Realization (NFR): Buyer B (+₹3,250 net) vs Buyer A.
+          </p>
+        </div>
+        <Link href="/demo">
+          <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold whitespace-nowrap">
+            Launch Judge Demo Hub
+            <ArrowRight className="w-3.5 h-3.5 ml-1" />
+          </Button>
+        </Link>
       </div>
 
       {/* Primary Key Metrics Grid */}

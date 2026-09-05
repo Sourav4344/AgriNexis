@@ -28,8 +28,8 @@ export function FinancialSnapshotCard({ financials }: FinancialSnapshotCardProps
           <div className="flex items-start gap-2">
             <AlertCircle className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
             <p>
-              <strong>NFR Economics:</strong> Not available from live backend (Logistics Engine pending Agent 9).
-              Gross offer value and terms are recorded, but itemized transportation deductions and net farmer realization will be populated once the logistics scoring engine is online.
+              <strong>NFR Economics:</strong> Not available for this record.
+              Gross offer value and terms are recorded, and itemized transportation deductions and net farmer realization will be populated once finalized.
             </p>
           </div>
         </CardContent>

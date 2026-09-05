@@ -36,6 +36,7 @@ interface NavItem {
 const navSections: { title?: string; items: NavItem[] }[] = [
   {
     items: [
+      { label: 'Judge Demo Hub', href: '/demo', icon: Sparkles, badge: 'SIH 2026' },
       { label: 'Overview', href: '/', icon: LayoutDashboard },
       { label: 'NFR Explainability', href: '/nfr-explainability', icon: Calculator, badge: 'CORE' },
       { label: 'Analytics', href: '/analytics', icon: BarChart3 },

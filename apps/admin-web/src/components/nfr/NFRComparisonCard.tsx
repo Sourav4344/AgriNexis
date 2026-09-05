@@ -36,6 +36,65 @@ export const NFRComparisonCard: React.FC<NFRComparisonCardProps> = ({
       </div>
       {sorted.length === 0 && <p role="status" className="p-6 text-slate-600">No selling options available. Select a listing and request recommendations.</p>}
 
+      {/* Side-by-Side NFR Hero Comparison Matrix */}
+      {bestOption && runnerUp && (
+        <div className="mb-6 overflow-hidden rounded-xl border border-emerald-300 bg-white shadow-sm">
+          <div className="bg-emerald-950 text-white p-3.5 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300">
+                Direct Side-by-Side NFR Analysis
+              </span>
+              <h4 className="text-base font-bold text-white">
+                {runnerUp.candidate_name || 'Rank #2'} vs {bestOption.candidate_name || 'Rank #1'}
+              </h4>
+            </div>
+            <span className="inline-flex items-center gap-1 bg-emerald-800 text-emerald-100 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-600">
+              <Award className="w-3.5 h-3.5 text-amber-300" />
+              {bestOption.candidate_name ? `${bestOption.candidate_name.split('(')[0].trim()} #1 Recommended` : '#1 Recommended'}
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs sm:text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-600 font-bold">
+                  <th className="py-2.5 px-4">Metric</th>
+                  <th className="py-2.5 px-4 text-center">{runnerUp.candidate_name || 'Option #2'}</th>
+                  <th className="py-2.5 px-4 text-center bg-emerald-50/70 text-emerald-950 font-extrabold">{bestOption.candidate_name || 'Option #1 (Winner)'}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-mono text-xs">
+                <tr>
+                  <td className="py-2.5 px-4 font-sans font-medium text-slate-700">Headline Offer Price</td>
+                  <td className="py-2.5 px-4 text-center text-slate-800 font-bold">{formatINR(runnerUp.estimated_unit_price_per_kg)}/kg</td>
+                  <td className="py-2.5 px-4 text-center bg-emerald-50/40 text-emerald-900 font-bold">{formatINR(bestOption.estimated_unit_price_per_kg)}/kg</td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 px-4 font-sans font-medium text-slate-700">Gross Selling Value</td>
+                  <td className="py-2.5 px-4 text-center text-slate-800">{formatINR(runnerUp.estimated_gross_selling_value)}</td>
+                  <td className="py-2.5 px-4 text-center bg-emerald-50/40 text-emerald-900">{formatINR(bestOption.estimated_gross_selling_value)}</td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 px-4 font-sans font-medium text-slate-700">Total Applicable Costs</td>
+                  <td className="py-2.5 px-4 text-center text-rose-600 font-bold">-{formatINR(runnerUp.estimated_total_applicable_cost)}</td>
+                  <td className="py-2.5 px-4 text-center bg-emerald-50/40 text-emerald-700 font-bold">-{formatINR(bestOption.estimated_total_applicable_cost)}</td>
+                </tr>
+                <tr className="bg-emerald-100/60 font-sans font-black text-slate-900 border-t-2 border-emerald-300">
+                  <td className="py-3 px-4 font-black">Net Farmer Realization (NFR)</td>
+                  <td className="py-3 px-4 text-center font-mono font-bold text-slate-700">{formatINR(runnerUp.estimated_net_farmer_realization)}</td>
+                  <td className="py-3 px-4 text-center font-mono font-black bg-emerald-200/80 text-emerald-950 text-sm sm:text-base">{formatINR(bestOption.estimated_net_farmer_realization)}</td>
+                </tr>
+                <tr className="bg-slate-50 text-[11px] font-sans">
+                  <td className="py-2 px-4 font-semibold text-slate-600">Recommendation Rank</td>
+                  <td className="py-2 px-4 text-center text-slate-500 font-bold">#2</td>
+                  <td className="py-2 px-4 text-center bg-emerald-50/70 text-emerald-800 font-black">#1 Recommended</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Comparison Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {sorted.map((rec) => {
@@ -170,9 +229,14 @@ export const NFRComparisonCard: React.FC<NFRComparisonCardProps> = ({
 
       {bestOption && runnerUp && (
         <div className="mt-5 p-5 bg-emerald-900 text-white rounded-xl space-y-2">
-          <p className="text-sm">{bestOption.candidate_name || 'Rank #1'} compared with {runnerUp.candidate_name || 'Rank #2'}</p>
+          <p className="text-sm text-emerald-200">{bestOption.candidate_name || 'Rank #1'} compared with {runnerUp.candidate_name || 'Rank #2'}</p>
           <p className="text-2xl font-bold">Realization Advantage: {subtractMoney(bestOption.estimated_net_farmer_realization, runnerUp.estimated_net_farmer_realization).startsWith('-') ? '' : '+'}{formatINR(subtractMoney(bestOption.estimated_net_farmer_realization, runnerUp.estimated_net_farmer_realization))}</p>
-          <p className="text-sm text-emerald-100">Difference in estimated net earnings after costs. Review the current amounts before acceptance.</p>
+          <p className="text-sm font-semibold text-emerald-300 uppercase tracking-wide">
+            MORE FARMER INCOME with {bestOption.candidate_name ? bestOption.candidate_name.split('(')[0].trim() : 'Rank #1'}
+          </p>
+          <p className="text-sm text-emerald-100">
+            Lower logistics costs make {bestOption.candidate_name ? bestOption.candidate_name.split('(')[0].trim() : 'Rank #1'} the better decision, despite the lower headline selling price.
+          </p>
         </div>
       )}
     </Card>
