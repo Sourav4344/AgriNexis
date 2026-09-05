@@ -16,9 +16,17 @@ interface DemoContextType {
 
 const DemoContext = createContext<DemoContextType | undefined>(undefined);
 
+const DEFAULT_API_URL =
+  process.env.NEXT_PUBLIC_ADMIN_API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  'http://localhost:8000/api/v1';
+const DEFAULT_DEMO_MODE =
+  process.env.NEXT_PUBLIC_ADMIN_DEMO_MODE === 'true' ||
+  process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
+
 export function DemoProvider({ children }: { children: React.ReactNode }) {
-  const [demoMode, setDemoModeState] = useState<boolean>(false);
-  const [apiBaseUrl, setApiBaseUrl] = useState<string>('http://localhost:8000/api/v1');
+  const [demoMode, setDemoModeState] = useState<boolean>(DEFAULT_DEMO_MODE);
+  const [apiBaseUrl, setApiBaseUrl] = useState<string>(DEFAULT_API_URL);
   const [authToken, setAuthToken] = useState<string>('');
   const [isBackendConnected, setIsBackendConnected] = useState<boolean>(false);
 
