@@ -36,7 +36,7 @@ export function DataTable<T>({
   if (isLoading) {
     return (
       <div className="w-full border border-slate-200 rounded-xl overflow-hidden bg-white">
-        <div className="p-8 flex flex-col items-center justify-center text-slate-500 gap-3">
+        <div role="status" className="p-8 flex flex-col items-center justify-center text-slate-500 gap-3">
           <div className="w-8 h-8 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin" />
           <span className="text-sm font-medium">Loading records...</span>
         </div>
@@ -61,7 +61,7 @@ export function DataTable<T>({
   return (
     <div className="w-full border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm flex flex-col">
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm text-slate-700">
+        <table className="responsive-table w-full text-left text-sm text-slate-700">
           <thead className="bg-slate-50 text-slate-600 text-xs font-semibold uppercase tracking-wider border-b border-slate-200">
             <tr>
               {columns.map((col, idx) => (
@@ -77,6 +77,9 @@ export function DataTable<T>({
               return (
                 <tr
                   key={rowKey}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  aria-label={onRowClick ? `Open record ${rowIdx + 1}` : undefined}
+                  onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ") && onRowClick) { event.preventDefault(); onRowClick(row); } }}
                   onClick={() => onRowClick && onRowClick(row)}
                   className={`transition-colors ${
                     onRowClick ? 'cursor-pointer hover:bg-slate-50/80' : 'hover:bg-slate-50/50'
@@ -90,7 +93,7 @@ export function DataTable<T>({
                       content = (row as any)[col.accessor];
                     }
                     return (
-                      <td key={colIdx} className={`px-4 py-3.5 align-middle ${col.className || ''}`}>
+                      <td data-label={col.header} key={colIdx} className={`px-4 py-3.5 align-middle ${col.className || ''}`}>
                         {content}
                       </td>
                     );

@@ -9,11 +9,11 @@ export function DemoBanner() {
 
   if (!isDemoMode) {
     return (
-      <div className="bg-slate-900 text-slate-300 px-4 py-1.5 text-xs font-medium flex items-center justify-between border-b border-slate-800">
+      <div className="bg-slate-900 text-slate-300 px-4 py-1.5 text-xs font-medium flex flex-wrap gap-3 items-center justify-between border-b border-slate-800">
         <div className="flex items-center space-x-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span className="text-slate-200 font-semibold">LIVE API CONNECTED</span>
-          <span className="hidden sm:inline text-slate-400">| FastAPI /api/v1 Production & RLS Enforced</span>
+          <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+          <span className="text-slate-200 font-semibold">LIVE WORKSPACE UNAVAILABLE</span>
+          <span className="hidden sm:inline text-slate-400">| Open the labelled demo to preview the product</span>
         </div>
         <button
           onClick={() => setDemoMode(true)}

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useId } from "react";
+import { useDialogFocus } from './useDialogFocus';
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
@@ -21,19 +22,8 @@ export function Modal({
   children,
   className,
 }: ModalProps) {
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-      window.addEventListener("keydown", handleKeyDown);
-    }
-    return () => {
-      document.body.style.overflow = "unset";
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isOpen, onClose]);
+  const panelRef = useDialogFocus(isOpen, onClose);
+  const titleId = useId();
 
   if (!isOpen) return null;
 
@@ -42,17 +32,19 @@ export function Modal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="modal-title"
+      aria-labelledby={titleId}
+      ref={panelRef}
+      tabIndex={-1}
     >
       <div
         className={cn(
-          "bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-xl overflow-hidden animate-in zoom-in-95 duration-200",
+          "bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-xl max-h-[90dvh] overflow-y-auto animate-in zoom-in-95 duration-200",
           className
         )}
       >
         <div className="flex items-center justify-between p-5 border-b border-slate-100">
           <div>
-            <h2 id="modal-title" className="text-lg font-bold text-slate-900">
+            <h2 id={titleId} className="text-lg font-bold text-slate-900">
               {title}
             </h2>
             {description && (

@@ -59,7 +59,7 @@ export default function DashboardPage() {
             {user.organization_name || user.display_name}
           </h1>
           <p className="text-slate-300 text-xs sm:text-sm max-w-2xl">
-            Real-time direct farm procurement with transparent Net Farmer Realization (NFR) calculations and verifiable fulfillment tracking.
+            Not Just the Best Price. The Best Decision. Find produce, submit an offer, and track your order. The farmer decides which offer to accept.
           </p>
         </div>
 

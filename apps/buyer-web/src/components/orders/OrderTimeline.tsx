@@ -30,7 +30,7 @@ export function OrderTimeline({ status }: OrderTimelineProps) {
         <div>
           <span className="font-bold">Order in Dispute Resolution</span>
           <p className="text-xs text-amber-700 mt-0.5">
-            A dispute has been raised regarding quality or weight specifications. Delivery progress paused.
+            This order is disputed. Review its recorded history for details.
           </p>
         </div>
       </div>
@@ -44,7 +44,7 @@ export function OrderTimeline({ status }: OrderTimelineProps) {
         <div>
           <span className="font-bold">Order Cancelled</span>
           <p className="text-xs text-rose-700 mt-0.5">
-            This order was cancelled prior to fulfillment. Reserved quantity returned to active stock.
+            This order is cancelled. Review its recorded history and payment status.
           </p>
         </div>
       </div>
@@ -72,6 +72,7 @@ export function OrderTimeline({ status }: OrderTimelineProps) {
           return (
             <div
               key={step.key}
+              aria-current={isCurrent ? "step" : undefined}
               className="flex flex-col items-center relative z-10 text-center"
             >
               <div
@@ -80,7 +81,7 @@ export function OrderTimeline({ status }: OrderTimelineProps) {
                     ? "bg-emerald-600 border-emerald-700 text-white shadow-md shadow-emerald-500/30 scale-110"
                     : isDone
                     ? "bg-emerald-100 border-emerald-600 text-emerald-800"
-                    : "bg-white border-slate-300 text-slate-400"
+                    : "bg-white border-slate-300 text-slate-600"
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -91,10 +92,11 @@ export function OrderTimeline({ status }: OrderTimelineProps) {
                     ? "text-emerald-900 font-bold"
                     : isDone
                     ? "text-slate-800"
-                    : "text-slate-400"
+                    : "text-slate-600"
                 }`}
               >
                 {step.label}
+                {isCurrent && <span className="block">Current</span>}
               </span>
             </div>
           );

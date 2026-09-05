@@ -10,7 +10,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", isLoading, children, disabled, ...props }, ref) => {
     const variantStyles = {
-      primary: "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-600/20 active:bg-emerald-800",
+      primary: "bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm shadow-emerald-600/20 active:bg-emerald-800",
       secondary: "bg-slate-800 hover:bg-slate-900 text-white shadow-sm active:bg-black",
       outline: "border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 active:bg-slate-100",
       ghost: "hover:bg-slate-100 text-slate-700 active:bg-slate-200",
@@ -26,6 +26,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
+        aria-busy={isLoading || undefined}
         disabled={disabled || isLoading}
         className={cn(
           "inline-flex items-center justify-center transition focus-visible:ring-2 focus-visible:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed",

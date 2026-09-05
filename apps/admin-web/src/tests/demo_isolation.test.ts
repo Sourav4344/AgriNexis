@@ -28,4 +28,11 @@ describe('Demo Fixture Isolation & Non-Promotion Invariants', () => {
     expect(rahul?.id).toBe('20000000-0000-4000-8000-000000000001');
     expect(rahul?.user_id).toBe('10000000-0000-4000-8000-000000000001');
   });
+
+  it('ensures live mode does not silently return demo fixtures on missing backend', async () => {
+    const { fetchAllUsers } = await import('../lib/api/endpoints');
+    const result = await fetchAllUsers({ baseUrl: 'http://localhost:8000/api/v1', demoMode: false });
+    expect(result.isBackendAvailable).toBe(false);
+    expect(result.profiles).toEqual([]);
+  });
 });

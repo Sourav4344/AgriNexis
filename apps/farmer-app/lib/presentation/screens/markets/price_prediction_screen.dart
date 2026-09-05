@@ -28,8 +28,8 @@ class PricePredictionScreen extends StatelessWidget {
           l10n.pricePredictionTitle,
           style: AppTypography.headlineLarge.copyWith(fontWeight: FontWeight.w800),
         ),
-        actions: const [
-          Padding(
+        actions: [
+          if (prediction?.dataMode == 'DEMO') const Padding(
             padding: EdgeInsets.only(right: 16.0),
             child: DemoBadge(),
           ),

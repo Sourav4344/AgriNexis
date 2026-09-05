@@ -24,8 +24,8 @@ export default function QualityPage() {
       {/* Critical AI Limitation & Safety Disclaimers */}
       <Card
         className="border-amber-300 bg-amber-50/40"
-        title="Quality AI Certification Boundary & Disclaimers"
-        subtitle="Mandatory regulatory standard for Government of Maharashtra SIH 2026 Evaluation"
+        title="Assistive visual assessment only"
+        subtitle="Images cannot establish laboratory or food-safety properties"
       >
         <div className="space-y-3 text-xs text-amber-950">
           <div className="p-3 bg-white rounded-xl border border-amber-200 flex items-start gap-3">
@@ -55,33 +55,11 @@ export default function QualityPage() {
         featureName="Visual Produce Quality AI Engine (POST /produce-listings/{id}/quality-reports)"
         plannedEndpoint="POST /produce-listings/{id}/quality-reports"
         assignedAgent="Agent 10 (Produce Quality AI)"
-        description="Agent 10 model inference pipeline is currently in development. When active, visual reports will attach structured observations and confidence intervals to produce listings."
+        description="Live visual assessment unavailable. Production computer vision inference is not connected in this workspace. Any future visual evidence remains strictly assistive."
       />
 
-      {/* Evaluation Sample Card */}
-      <Card
-        title="Assistive Quality Grading Schema (Reference Spec)"
-        subtitle="Expected structured evidence format for Agent 10"
-      >
-        <div className="p-4 bg-slate-900 text-slate-200 rounded-xl font-mono text-xs space-y-2">
-          <div className="text-emerald-400 font-bold">Representative Visual Quality Output Schema</div>
-          <pre className="text-[11px] leading-relaxed overflow-x-auto text-emerald-200">
-{`{
-  "method": "COMPUTER_VISION_ASSISTED",
-  "declared_grade": "A",
-  "assessed_visual_grade": "A",
-  "surface_color_uniformity": "92%",
-  "blemish_score": "0.04 (Low)",
-  "verification_status": "ASSISTIVE_ONLY",
-  "limitations": [
-    "INTERNAL_DEFECTS_NOT_ANALYZED",
-    "NO_CHEMICAL_RESIDUE_TESTING_PERFORMED",
-    "REQUIRES_PHYSICAL_BUYER_INSPECTION"
-  ],
-  "model_version": "agrinexis-quality-v1.0"
-}`}
-          </pre>
-        </div>
+      <Card title="Live visual assessment unavailable" subtitle="ASSISTIVE_VISUAL_ASSESSMENT_ONLY">
+        <p className="text-sm text-slate-600">No assessment available. When supplied, evidence may describe visible color uniformity, surface defect ratio, visible damage, size consistency, ripeness, and image usability.</p>
       </Card>
     </div>
   );

@@ -146,7 +146,6 @@ class HomeScreen extends StatelessWidget {
               _buildSectionHeader(
                 title: l10n.activeListingTitle,
                 subtitle: 'Active in marketplace for buyer matching',
-                badge: const ModeBadge(dataMode: 'LIVE'),
               ),
               const SizedBox(height: AppSpacing.s8),
               AppCard(

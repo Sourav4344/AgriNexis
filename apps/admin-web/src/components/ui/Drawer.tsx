@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import { useDialogFocus } from './useDialogFocus';
+import React, { useId } from 'react';
 import { X } from 'lucide-react';
 
 interface DrawerProps {
@@ -18,29 +19,22 @@ export const Drawer: React.FC<DrawerProps> = ({
   children,
   footer,
 }) => {
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  const panelRef = useDialogFocus(isOpen, onClose);
+  const titleId = useId();
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
+    <div ref={panelRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby={titleId} className="fixed inset-0 z-50 overflow-hidden">
       <div
         className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+      <div className="fixed inset-y-0 right-0 max-w-full flex pl-2 sm:pl-10">
         <div className="w-screen max-w-md md:max-w-xl bg-white shadow-2xl border-l border-slate-200 flex flex-col">
           <div className="px-6 py-5 border-b border-slate-100 flex items-start justify-between bg-slate-50/50">
             <div>
-              <h3 className="text-base font-semibold text-slate-900">{title}</h3>
+              <h3 id={titleId} className="text-base font-semibold text-slate-900">{title}</h3>
               {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
             </div>
             <button

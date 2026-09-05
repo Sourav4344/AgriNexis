@@ -94,7 +94,7 @@ abstract class AppLocalizations {
   String get handlingCost;
   String get otherCosts;
   String get totalDeductions;
-  String get youEarnMoreHeadline(String amount);
+  String youEarnMoreHeadline(String amount);
   String get whyThisDecision;
   String get acceptOfferCta;
   String get acceptConfirmationTitle;

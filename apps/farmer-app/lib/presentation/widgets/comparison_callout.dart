@@ -4,6 +4,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../models/recommendation.dart';
+import '../../l10n/app_localizations.dart';
 
 class ComparisonCallout extends StatelessWidget {
   final Recommendation rank1;
@@ -18,7 +19,7 @@ class ComparisonCallout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final benefit = rank1.estimatedNetFarmerRealization - rank2.estimatedNetFarmerRealization;
-    final costDifference = rank2.estimatedTotalApplicableCost - rank1.estimatedTotalApplicableCost;
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.s16),
@@ -43,7 +44,7 @@ class ComparisonCallout extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'You earn ${CurrencyFormatter.format(benefit)} more',
+                      l10n.youEarnMoreHeadline(CurrencyFormatter.format(benefit)),
                       style: AppTypography.headlineLarge.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w800,
@@ -67,11 +68,13 @@ class ComparisonCallout extends StatelessWidget {
           const SizedBox(height: AppSpacing.s12),
 
           // Side-by-side quick comparison table
-          Row(
-            children: [
-              Expanded(
+          LayoutBuilder(builder: (context, constraints) {
+            final width = constraints.maxWidth < 440 ? constraints.maxWidth : (constraints.maxWidth - AppSpacing.s12) / 2;
+            return Wrap(spacing: AppSpacing.s12, runSpacing: AppSpacing.s12, children: [
+              SizedBox(width: width,
                 child: _buildEntityMiniBox(
-                  entityName: 'Buyer B (Best)',
+                  l10n: l10n,
+                  entityName: rank1.candidateName,
                   headlinePrice: CurrencyFormatter.format(rank1.estimatedUnitPricePerKg),
                   grossValue: CurrencyFormatter.format(rank1.estimatedGrossSellingValue),
                   deductions: '— ${CurrencyFormatter.format(rank1.estimatedTotalApplicableCost)}',
@@ -79,10 +82,10 @@ class ComparisonCallout extends StatelessWidget {
                   isRecommended: true,
                 ),
               ),
-              const SizedBox(width: AppSpacing.s12),
-              Expanded(
+              SizedBox(width: width,
                 child: _buildEntityMiniBox(
-                  entityName: 'Buyer A',
+                  l10n: l10n,
+                  entityName: rank2.candidateName,
                   headlinePrice: CurrencyFormatter.format(rank2.estimatedUnitPricePerKg),
                   grossValue: CurrencyFormatter.format(rank2.estimatedGrossSellingValue),
                   deductions: '— ${CurrencyFormatter.format(rank2.estimatedTotalApplicableCost)}',
@@ -90,12 +93,12 @@ class ComparisonCallout extends StatelessWidget {
                   isRecommended: false,
                 ),
               ),
-            ],
-          ),
+            ]);
+          }),
 
           const SizedBox(height: AppSpacing.s12),
           Text(
-            '💡 Why? Even though Buyer A offers ₹1/kg higher headline price, their transport & logistics costs are ₹${CurrencyFormatter.format(costDifference, showDecimals: false).replaceAll('₹', '')} higher. Buyer B leaves the highest actual money in your bank.',
+            rank1.explanationText,
             style: AppTypography.bodyMedium.copyWith(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.w500,
@@ -108,6 +111,7 @@ class ComparisonCallout extends StatelessWidget {
   }
 
   Widget _buildEntityMiniBox({
+    required AppLocalizations l10n,
     required String entityName,
     required String headlinePrice,
     required String grossValue,
@@ -137,9 +141,9 @@ class ComparisonCallout extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.s4),
-          Text('Headline: $headlinePrice/kg', style: AppTypography.labelSmall),
-          Text('Gross: $grossValue', style: AppTypography.labelSmall),
-          Text('Costs: $deductions',
+          Text('$headlinePrice/kg', style: AppTypography.labelSmall),
+          Text('${l10n.grossSellingValue}: $grossValue', style: AppTypography.labelSmall),
+          Text('${l10n.totalDeductions}: $deductions',
               style: AppTypography.labelSmall.copyWith(color: AppColors.costDeduction)),
           const SizedBox(height: AppSpacing.s6),
           Container(
@@ -152,7 +156,7 @@ class ComparisonCallout extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('You Get (NFR)', style: AppTypography.labelSmall.copyWith(fontSize: 10)),
+                Text(l10n.netFarmerRealization, style: AppTypography.labelSmall.copyWith(fontSize: 10)),
                 Text(
                   nfrValue,
                   style: AppTypography.labelLarge.copyWith(

@@ -33,10 +33,11 @@ export const BackendUnavailable: React.FC<BackendUnavailableProps> = ({
           </div>
           <p className="text-xs text-slate-600 mt-1">
             {description ||
-              `The executable FastAPI backend does not yet expose live endpoints for ${featureName}. In compliance with our multi-agent working agreement, this portal does not fabricate local persistence or simulate fake approval workflows.`}
+              `This capability is unavailable in the current workspace. No action has been submitted.`}
           </p>
           {(plannedEndpoint || assignedAgent) && (
-            <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-slate-500 font-mono bg-white/80 p-2.5 rounded border border-amber-200">
+            <details className="mt-3 flex flex-wrap items-center gap-4 text-xs text-slate-500 font-mono bg-white/80 p-2.5 rounded border border-amber-200">
+              <summary className="cursor-pointer">Technical details</summary>
               {plannedEndpoint && (
                 <div className="flex items-center gap-1.5">
                   <Terminal className="w-3.5 h-3.5 text-slate-400" />
@@ -49,7 +50,7 @@ export const BackendUnavailable: React.FC<BackendUnavailableProps> = ({
                   <span>Assigned: {assignedAgent}</span>
                 </div>
               )}
-            </div>
+            </details>
           )}
         </div>
       </div>

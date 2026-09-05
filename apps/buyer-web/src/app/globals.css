@@ -38,3 +38,17 @@ body {
   outline: 2px solid #16a34a;
   outline-offset: 2px;
 }
+
+@layer base {
+ body { line-height: 1.5; }
+ h1, h2, h3 { text-wrap: balance; }
+ button, input, select, textarea { min-height: 44px; }
+ button { min-width: 44px; }
+ :focus-visible { outline: 3px solid #047857; outline-offset: 3px; }
+ main { min-width: 0; overflow-wrap: anywhere; }
+}
+.skip-link { position: fixed; top: 8px; left: 8px; z-index: 100; padding: 12px 20px; background: #064e3b; color: white; border-radius: 8px; transform: translateY(-160%); }
+.skip-link:focus { transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+ *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

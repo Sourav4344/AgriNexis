@@ -24,7 +24,7 @@ export function AppHeader() {
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex flex-wrap justify-between items-center gap-3 py-3 min-h-16">
           {/* Logo & Platform Name */}
           <div className="flex items-center space-x-3">
             <Link href="/" className="flex items-center space-x-2.5">
@@ -43,18 +43,6 @@ export function AppHeader() {
                 </p>
               </div>
             </Link>
-          </div>
-
-          {/* Search bar */}
-          <div className="hidden md:flex items-center flex-1 max-w-md mx-8">
-            <div className="relative w-full">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search crops, farmer listings, mandis, lots..."
-                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
-              />
-            </div>
           </div>
 
           {/* Right section: Persona switcher, Notifications, Profile */}
@@ -77,7 +65,7 @@ export function AppHeader() {
                   ) : (
                     <Building2 className="w-4 h-4 text-emerald-700" />
                   )}
-                  <span>{role === "FPO" ? "FPO Operator Hub" : "Institutional Buyer"}</span>
+                  <span>{role === "FPO" ? "FPO" : "Buyer"}</span>
                   <span className="text-[10px] bg-amber-200/80 text-amber-950 font-bold px-1.5 py-0.5 rounded ml-1">
                     Demo Switcher
                   </span>
@@ -90,7 +78,7 @@ export function AppHeader() {
                     role="menu"
                   >
                     <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 py-1">
-                      Simulated Persona Switcher
+                      Demo role preview
                     </div>
                     <button
                       onClick={() => {
@@ -137,7 +125,7 @@ export function AppHeader() {
                 ) : (
                   <Building2 className="w-4 h-4 text-emerald-700" />
                 )}
-                <span>{role === "FPO" ? "FPO Operator Hub" : "Institutional Buyer"}</span>
+                <span>{role === "FPO" ? "FPO" : "Buyer"}</span>
                 <Lock className="w-3 h-3 text-slate-400 ml-1" />
               </div>
             )}
@@ -150,29 +138,13 @@ export function AppHeader() {
                 aria-label="Notifications"
               >
                 <Bell className="w-5 h-5" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-600 rounded-full ring-2 ring-white"></span>
+
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-xl shadow-xl p-3 z-50 text-sm">
-                  <div className="font-semibold text-slate-900 mb-2 pb-2 border-b border-slate-100 flex justify-between items-center">
-                    <span>Recent Notifications</span>
-                    <span className="text-xs text-emerald-600 font-normal">2 new</span>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="p-2 bg-emerald-50 rounded-lg text-xs">
-                      <p className="font-semibold text-emerald-950">Offer Accepted by Rahul Patil</p>
-                      <p className="text-emerald-800 mt-0.5">
-                        Order <span className="font-mono font-bold">ord-9921</span> created for 1,000 kg Tomato.
-                      </p>
-                      <p className="text-slate-400 mt-1 text-[10px]">10 minutes ago</p>
-                    </div>
-                    <div className="p-2 bg-slate-50 rounded-lg text-xs">
-                      <p className="font-semibold text-slate-900">New Produce Listing Available</p>
-                      <p className="text-slate-600 mt-0.5">Suresh Deshmukh listed 5,000 kg Grade A Nashik Red Onion.</p>
-                      <p className="text-slate-400 mt-1 text-[10px]">1 hour ago</p>
-                    </div>
-                  </div>
+                <div className="absolute right-0 mt-2 w-72 max-w-[90vw] bg-white border border-slate-200 rounded-xl shadow-xl p-3 z-50 text-sm">
+                  <p className="font-semibold">Notifications unavailable</p>
+                  <p className="mt-1 text-slate-600">Open Orders to check the latest order and payment status.</p>
                 </div>
               )}
             </div>

@@ -1,8 +1,8 @@
 import React from 'react';
-import { Award, ArrowUpRight, TrendingDown, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Award, CheckCircle2 } from 'lucide-react';
 import { Card } from '../ui/Card';
-import { Badge } from '../ui/Badge';
-import { formatINR } from '../../lib/utils/money';
+import { ProvenanceBadge } from '../ui/ProvenanceBadge';
+import { formatINR, subtractMoney } from '../../lib/utils/money';
 import { RecommendationOption } from '../../lib/api/types';
 
 interface NFRComparisonCardProps {
@@ -26,30 +26,15 @@ export const NFRComparisonCard: React.FC<NFRComparisonCardProps> = ({
   return (
     <Card
       className={`border-emerald-200 bg-gradient-to-b from-emerald-50/40 to-white ${className}`}
-      title="Net Farmer Realization (NFR) Decision Engine"
-      subtitle={`Canonical SIH 2026 Evaluation Model • Crop: ${cropName} • Volume: ${parseFloat(quantityKg).toLocaleString()} kg`}
-      badge={
-        <Badge variant="demo" size="sm">
-          DEMO DATA — NOT LIVE GOVERNMENT DATA
-        </Badge>
-      }
+      title="Not Just the Best Price. The Best Decision."
+      subtitle={`Net Farmer Realization • ${cropName} • ${parseFloat(quantityKg).toLocaleString('en-IN')} kg`}
     >
-      {/* Mathematical Principle Callout */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs mb-6">
-        <div className="flex items-center justify-between flex-wrap gap-2 text-xs text-slate-600 mb-2">
-          <span className="font-semibold text-slate-800">
-            Government of Maharashtra • PS ID: 26132 Objective
-          </span>
-          <span className="font-mono text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-            NFR = Gross - (Transport + Storage + Handling + Other)
-          </span>
-        </div>
-        <p className="text-xs text-slate-600 leading-relaxed">
-          Traditional APMC linkages mislead farmers with headline prices. AgriNexis computes the
-          true <strong>Net Farmer Realization</strong> after itemizing exact logistics, storage, and
-          handling costs before offer acceptance.
-        </p>
+      <div className="bg-white p-4 rounded-xl border border-slate-200 mb-6 space-y-2">
+        <p className="font-semibold text-slate-900">Higher price ≠ higher farmer earnings.</p>
+        <p className="text-sm text-slate-600">Gross Selling Value − Transportation − Storage − Handling − Other Applicable Cost = Net Farmer Realization (NFR)</p>
+        <p className="text-sm text-slate-600">Compare estimated earnings after all applicable costs. The farmer owns the acceptance decision.</p>
       </div>
+      {sorted.length === 0 && <p role="status" className="p-6 text-slate-600">No selling options available. Select a listing and request recommendations.</p>}
 
       {/* Comparison Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -66,14 +51,14 @@ export const NFRComparisonCard: React.FC<NFRComparisonCardProps> = ({
             >
               <div className="flex items-start justify-between gap-2 mb-3">
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                       Rank #{rec.rank}
                     </span>
                     {isWinner && (
                       <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
                         <Award className="w-3.5 h-3.5 text-emerald-700" />
-                        RECOMMENDED DECISION
+                        #1 Recommended
                       </span>
                     )}
                   </div>
@@ -90,7 +75,7 @@ export const NFRComparisonCard: React.FC<NFRComparisonCardProps> = ({
               </div>
 
               {/* Financial Breakdown Table */}
-              <div className="space-y-2 text-xs border-t border-b border-slate-200/80 py-3 my-3">
+              <div className="space-y-2 text-sm border-t border-b border-slate-200/80 py-3 my-3">
                 <div className="flex justify-between items-center text-slate-700">
                   <span>Gross Selling Value</span>
                   <span className="font-semibold text-slate-900">
@@ -136,8 +121,8 @@ export const NFRComparisonCard: React.FC<NFRComparisonCardProps> = ({
 
               {/* Net Farmer Realization Result */}
               <div
-                className={`p-3 rounded-lg flex items-center justify-between ${
-                  isWinner ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-800'
+                className={`p-3 rounded-lg flex flex-wrap gap-3 items-center justify-between ${
+                  isWinner ? 'bg-emerald-800 text-white' : 'bg-slate-100 text-slate-800'
                 }`}
               >
                 <div>
@@ -148,7 +133,7 @@ export const NFRComparisonCard: React.FC<NFRComparisonCardProps> = ({
                   >
                     Net Farmer Realization (NFR)
                   </div>
-                  <div className="text-xl font-black tracking-tight">
+                  <div className="text-3xl font-bold tracking-tight">
                     {formatINR(rec.estimated_net_farmer_realization)}
                   </div>
                 </div>
@@ -160,7 +145,7 @@ export const NFRComparisonCard: React.FC<NFRComparisonCardProps> = ({
                     </span>
                   ) : (
                     <span className="text-rose-600 font-semibold">
-                      -{formatINR(rec.difference_from_best || '3250.00')} less
+                      {formatINR(subtractMoney(bestOption.estimated_net_farmer_realization, rec.estimated_net_farmer_realization))} below rank #1
                     </span>
                   )}
                 </div>
@@ -168,12 +153,13 @@ export const NFRComparisonCard: React.FC<NFRComparisonCardProps> = ({
 
               {/* Decision Facts */}
               <div className="mt-3 flex flex-wrap gap-1.5">
+                <ProvenanceBadge mode={rec.data_mode} />
                 {rec.explanation_facts.map((fact, idx) => (
                   <span
                     key={idx}
                     className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200"
                   >
-                    {fact}
+                    {({ LOWER_TOTAL_COST: 'Lower total cost', HIGHER_NET_REALIZATION: 'Higher net earnings', CLOSER_BUYER: 'Closer buyer' } as Record<string, string>)[fact] || fact.replaceAll('_', ' ').toLowerCase()}
                   </span>
                 ))}
               </div>
@@ -182,27 +168,11 @@ export const NFRComparisonCard: React.FC<NFRComparisonCardProps> = ({
         })}
       </div>
 
-      {/* Summary Highlight for Judges */}
       {bestOption && runnerUp && (
-        <div className="mt-5 p-4 bg-emerald-900 text-emerald-50 rounded-xl flex items-center justify-between flex-wrap gap-3">
-          <div className="space-y-0.5">
-            <div className="text-xs font-semibold text-emerald-300 uppercase tracking-wider">
-              Innovation Impact Summary
-            </div>
-            <div className="text-sm font-medium">
-              Choosing <strong>{bestOption.candidate_name}</strong> yields an extra{' '}
-              <span className="text-amber-300 font-bold underline">
-                {formatINR(
-                  parseFloat(bestOption.estimated_net_farmer_realization) -
-                    parseFloat(runnerUp.estimated_net_farmer_realization)
-                )}
-              </span>{' '}
-              for Farmer Rahul, despite Buyer A offering ₹1.00/kg higher headline price!
-            </div>
-          </div>
-          <div className="text-xs font-mono text-emerald-200 bg-emerald-950/80 px-3 py-1.5 rounded-lg border border-emerald-800">
-            Realization Advantage: +₹3,250.00 (12.75% increase)
-          </div>
+        <div className="mt-5 p-5 bg-emerald-900 text-white rounded-xl space-y-2">
+          <p className="text-sm">{bestOption.candidate_name || 'Rank #1'} compared with {runnerUp.candidate_name || 'Rank #2'}</p>
+          <p className="text-2xl font-bold">Realization Advantage: {subtractMoney(bestOption.estimated_net_farmer_realization, runnerUp.estimated_net_farmer_realization).startsWith('-') ? '' : '+'}{formatINR(subtractMoney(bestOption.estimated_net_farmer_realization, runnerUp.estimated_net_farmer_realization))}</p>
+          <p className="text-sm text-emerald-100">Difference in estimated net earnings after costs. Review the current amounts before acceptance.</p>
         </div>
       )}
     </Card>

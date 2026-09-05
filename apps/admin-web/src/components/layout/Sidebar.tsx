@@ -93,7 +93,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
       <aside
         className={`fixed top-0 bottom-0 left-0 z-40 w-64 bg-slate-900 text-slate-300 flex flex-col transition-transform duration-200 ease-in-out border-r border-slate-800 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          isOpen ? 'translate-x-0 visible' : '-translate-x-full invisible lg:visible lg:translate-x-0'
         }`}
       >
         {/* Brand Top Header */}
@@ -113,8 +113,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </Link>
         </div>
 
+        <button type="button" onClick={onClose} className="lg:hidden p-3 text-white">Close navigation</button>
         {/* Navigation items scrollable list */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
+        <nav aria-label="Admin workspace" className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
           {navSections.map((section, sIdx) => (
             <div key={sIdx} className="space-y-1">
               {section.title && (
@@ -129,8 +130,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   <Link
                     key={item.href}
                     href={item.href}
+                    aria-current={isActive ? "page" : undefined}
                     onClick={onClose}
-                    className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                    className={`flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
                       isActive
                         ? 'bg-emerald-700 text-white font-semibold shadow-xs'
                         : 'text-slate-300 hover:bg-slate-800 hover:text-white'

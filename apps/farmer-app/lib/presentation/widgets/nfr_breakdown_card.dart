@@ -4,6 +4,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../models/recommendation.dart';
+import '../../l10n/app_localizations.dart';
 import 'app_card.dart';
 import 'demo_badge.dart';
 
@@ -24,6 +25,7 @@ class NfrBreakdownCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isRank1 = recommendation.isBestOption;
+    final l10n = AppLocalizations.of(context);
 
     return AppCard(
       onTap: onTap,
@@ -78,7 +80,7 @@ class NfrBreakdownCard extends StatelessWidget {
                 const Icon(Icons.location_on_outlined, size: 16, color: AppColors.textSecondary),
                 const SizedBox(width: AppSpacing.s4),
                 Text(
-                  '${recommendation.distanceKm!.toStringAsFixed(0)} km away • ${recommendation.buyerVerificationStatus ?? "VERIFIED"}',
+                  '${recommendation.distanceKm!.toStringAsFixed(0)} km away • ${recommendation.buyerVerificationStatus ?? ''}',
                   style: AppTypography.bodyMedium,
                 ),
               ],
@@ -104,25 +106,18 @@ class NfrBreakdownCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Net Farmer Realization',
+                      l10n.netFarmerRealization,
                       style: AppTypography.labelLarge.copyWith(
                         color: isRank1 ? AppColors.nfrHighlight : AppColors.textPrimary,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    Text(
-                      '(In Your Hand)',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: isRank1 ? AppColors.nfrHighlight : AppColors.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+
                   ],
                 ),
                 const SizedBox(height: AppSpacing.s4),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text(
                       CurrencyFormatter.format(recommendation.estimatedNetFarmerRealization),
@@ -148,12 +143,12 @@ class NfrBreakdownCard extends StatelessWidget {
 
           // Transparent Deductions Breakdown Table
           Text(
-            'Transparent Financial Breakdown',
+            l10n.whyThisDecision,
             style: AppTypography.labelLarge.copyWith(fontSize: 14, color: AppColors.textSecondary),
           ),
           const SizedBox(height: AppSpacing.s8),
           _buildFinancialRow(
-            label: 'Offered Price (Gross)',
+            label: l10n.grossSellingValue,
             rate: '${CurrencyFormatter.format(recommendation.estimatedUnitPricePerKg)}/kg × ${CurrencyFormatter.formatQuantity(recommendation.estimatedQuantityKg)}',
             amount: CurrencyFormatter.format(recommendation.estimatedGrossSellingValue),
             isPositive: true,
@@ -161,32 +156,32 @@ class NfrBreakdownCard extends StatelessWidget {
           const Divider(height: 12),
           _buildFinancialRow(
             label: '— Transportation (Logistics)',
-            rate: recommendation.distanceKm != null ? '${recommendation.distanceKm!.toStringAsFixed(0)} km trip' : 'Direct transport',
+            rate: recommendation.distanceKm != null ? '${recommendation.distanceKm!.toStringAsFixed(0)} km trip' : '',
             amount: '— ${CurrencyFormatter.format(recommendation.estimatedTransportationCost)}',
             isDeduction: true,
           ),
           _buildFinancialRow(
             label: '— Storage & Preservation',
-            rate: 'Safe holding estimate',
+            rate: '',
             amount: '— ${CurrencyFormatter.format(recommendation.estimatedStorageCost)}',
             isDeduction: true,
           ),
           _buildFinancialRow(
             label: '— Loading & Handling',
-            rate: 'Hamali & farmgate labor',
+            rate: '',
             amount: '— ${CurrencyFormatter.format(recommendation.estimatedHandlingCost)}',
             isDeduction: true,
           ),
           _buildFinancialRow(
             label: '— Market Cess & Other Deductions',
-            rate: 'Platform & APMC cess',
+            rate: '',
             amount: '— ${CurrencyFormatter.format(recommendation.estimatedOtherApplicableCost)}',
             isDeduction: true,
           ),
           const Divider(height: 16, thickness: 1.5),
           _buildFinancialRow(
-            label: 'Total Cost Deductions',
-            rate: 'Total expenses',
+            label: l10n.totalDeductions,
+            rate: '',
             amount: '— ${CurrencyFormatter.format(recommendation.estimatedTotalApplicableCost)}',
             isBold: true,
             isDeduction: true,
@@ -254,7 +249,7 @@ class NfrBreakdownCard extends StatelessWidget {
                     color: AppColors.textPrimary,
                   ),
                 ),
-                Text(
+                if (rate.isNotEmpty) Text(
                   rate,
                   style: AppTypography.labelSmall.copyWith(
                     color: AppColors.textTertiary,

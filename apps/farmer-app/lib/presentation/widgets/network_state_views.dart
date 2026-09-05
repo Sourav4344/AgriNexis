@@ -3,6 +3,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import 'app_button.dart';
+import '../../l10n/app_localizations.dart';
 
 class LoadingStateView extends StatelessWidget {
   final String? message;
@@ -23,7 +24,7 @@ class LoadingStateView extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.s16),
             Text(
-              message ?? 'Loading data...',
+              message ?? AppLocalizations.of(context).loading,
               style: AppTypography.bodyLarge.copyWith(color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
@@ -59,7 +60,7 @@ class ErrorStateView extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.s16),
             Text(
-              'Unable to load information',
+              AppLocalizations.of(context).errorOccurred,
               style: AppTypography.headlineMedium,
               textAlign: TextAlign.center,
             ),
@@ -71,7 +72,7 @@ class ErrorStateView extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.s24),
             AppButton(
-              label: 'Retry Connection',
+              label: AppLocalizations.of(context).retry,
               icon: Icons.refresh,
               onPressed: onRetry,
               width: 220,

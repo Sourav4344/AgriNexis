@@ -30,8 +30,9 @@ class RecommendationsScreen extends StatelessWidget {
           l10n.bestRecommendationTitle,
           style: AppTypography.headlineLarge.copyWith(fontWeight: FontWeight.w800),
         ),
-        actions: const [
-          Padding(
+        actions: [
+          if (recommendations.any((recommendation) => recommendation.isDemo))
+          const Padding(
             padding: EdgeInsets.only(right: 16.0),
             child: DemoBadge(),
           ),
@@ -39,6 +40,8 @@ class RecommendationsScreen extends StatelessWidget {
       ),
       body: recoState.isLoading
           ? const LoadingStateView()
+          : recoState.errorMessage != null
+              ? ErrorStateView(message: l10n.errorOccurred, onRetry: () => recoState.loadRecommendations(listingId))
           : recommendations.isEmpty
               ? EmptyStateView(
                   title: 'No matched buyers yet',
